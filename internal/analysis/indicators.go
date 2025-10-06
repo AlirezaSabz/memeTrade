@@ -7,13 +7,6 @@ import (
 	"go.mod/internal/domain"
 )
 
-//	func (TrendLine TrendLine) getLineEquation() func(x int) float64 {
-//		return func(x int) float64 {
-//			Y := (TrendLine.Slope * float64(x)) + TrendLine.Y_intercept
-//			return Y
-//		}
-//	}
-
 func GetUpperTrendLine(candles []domain.Candle) (domain.TrendLine, error) {
 	if len(candles) < 10 {
 		return domain.TrendLine{}, fmt.Errorf("not enough candles")

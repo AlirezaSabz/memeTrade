@@ -2,51 +2,48 @@ package services
 
 import (
 	"errors"
+	"fmt"
 
 	"go.mod/internal/analysis"
 	"go.mod/internal/domain"
 )
 
-type TriangleType string
-
-const (
-	Ascending   TriangleType = "Ascending"
-	Descending  TriangleType = "Descending"
-	Symmetrical TriangleType = "Symmetrical"
-	NoTriangle  TriangleType = "NoTriangle"
-)
-
-// DetectTriangle analyzes candle data and returns the type of triangle pattern.
-func DetectTriangle(candles []domain.Candle) (TriangleType, error) {
-	if len(candles) < 10 {
-		return NoTriangle, errors.New("not enough candles to detect pattern")
+func DetectTriangle(pair *domain.Pair) error {
+	if len(pair.Candles) < 10 {
+		pair.TriangleType = domain.NoTriangle
+		return errors.New("not enough candles to detect pattern")
 	}
 
-	upperTrend, err := analysis.GetUpperTrendLine(candles)
+	upperTrend, err := analysis.GetUpperTrendLine(pair.Candles)
 	if err != nil {
-		return NoTriangle, err
+		pair.TriangleType = domain.NoTriangle
+		return fmt.Errorf("failed to find upper trendline")
 	}
-
-	lowerTrend, err := analysis.GetLowerTrendLine(candles)
+	pair.UpperTrendLine = upperTrend
+	lowerTrend, err := analysis.GetLowerTrendLine(pair.Candles)
 	if err != nil {
-		return NoTriangle, err
+		pair.TriangleType = domain.NoTriangle
+		return fmt.Errorf("failed to find lower trendline")
 	}
-
+	pair.LowerTrendLine = lowerTrend
 	intersection, err := analysis.IntersectionPoint(upperTrend, lowerTrend)
 	if err != nil {
-		return NoTriangle, err
+		pair.TriangleType = domain.NoTriangle
+		return fmt.Errorf("failed to find itersection point")
 	}
 
 	if intersection.X < upperTrend.ClosePoint.X && intersection.X < lowerTrend.ClosePoint.X {
-		return NoTriangle, nil
+		pair.TriangleType = domain.NoTriangle
+		return nil
 	}
 
 	switch {
 	case lowerTrend.Slope < 0 && upperTrend.Slope < 0:
-		return Descending, nil
+		pair.TriangleType = domain.Descending
 	case lowerTrend.Slope > 0 && upperTrend.Slope > 0:
-		return Ascending, nil
+		pair.TriangleType = domain.Ascending
 	default:
-		return Symmetrical, nil
+		pair.TriangleType = domain.Symmetrical
 	}
+	return nil
 }

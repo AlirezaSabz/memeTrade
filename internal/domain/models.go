@@ -5,8 +5,13 @@ type Token struct {
 	Pairs   []Pair
 }
 type Pair struct {
-	Pair    string
-	Candles []Candle
+	Pair           string
+	Candles        []Candle
+	UpperTrendLine TrendLine
+	LowerTrendLine TrendLine
+	TriangleType   TriangleType
+	StartTime      int64
+	EndTime        int64
 }
 
 type Candle struct {
@@ -25,4 +30,9 @@ type TrendLine struct {
 	ClosePoint  Point
 	Y_intercept float64
 	Slope       float64
+}
+
+func (TrendLine *TrendLine) LineEquation(x int) float64 {
+	Y := (TrendLine.Slope * float64(x)) + TrendLine.Y_intercept
+	return Y
 }

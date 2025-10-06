@@ -7,7 +7,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"time"
 )
 
 type BirdeyeClient struct {
@@ -56,11 +55,9 @@ func (c *BirdeyeClient) TrendingTokens() ([]Token, error) {
 
 }
 
-func (c *BirdeyeClient) TokenOHLC(address string) ([]Candle, error) {
+func (c *BirdeyeClient) TokenOHLC(address string, timeFrom int64, timeTo int64) ([]Candle, error) {
 	// address = "Czfq3xZZDmsdGdUyrNLtRhGc47cXcZtLG4crryfu44zE"
-	timeTo := time.Now().Unix()
-	timeFrom := timeTo - 2000
-	url := fmt.Sprintf("https://public-api.birdeye.so/defi/ohlcv/pair?address=%s&type=1m&time_from=%d&time_to=%d", address, timeFrom, timeTo)
+	url := fmt.Sprintf("https://public-api.birdeye.so/defi/ohlcv/pair?address=%s&type=5m&time_from=%d&time_to=%d", address, timeFrom, timeTo)
 	req, _ := http.NewRequest("GET", url, nil)
 
 	req.Header.Add("accept", "application/json")

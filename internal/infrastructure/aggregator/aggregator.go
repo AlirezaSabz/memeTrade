@@ -3,6 +3,7 @@ package aggregator
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"go.mod/internal/domain"
 	birdeyeclient "go.mod/internal/infrastructure/birdeye_client"
@@ -31,14 +32,15 @@ func (c *Aggregator) Tokens() ([]domain.Token, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to get trending tokens:\n %w", err)
 	}
-
+	timeTo := time.Now().Unix()
+	timeFrom := timeTo - 2000
 	for _, trendToken := range trendTokens {
 		pairs, err := c.moralisClient.GetAddressPairs(trendToken.Address)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get address pairs: %w", err)
 		}
 		for _, pair := range pairs.Pairs {
-			candles, err := c.birdeyeClient.TokenOHLC(pair.PairAddress)
+			candles, err := c.birdeyeClient.TokenOHLC(pair.PairAddress, timeFrom, timeTo)
 			if err != nil {
 				return nil, fmt.Errorf("failed to get token ohlc: %w", err)
 			}
@@ -49,7 +51,7 @@ func (c *Aggregator) Tokens() ([]domain.Token, error) {
 					Pairs:   []domain.Pair{},
 				}
 			}
-			addPairToToken(tokensMap[trendToken.Address], pair, candles)
+			addPairToToken(tokensMap[trendToken.Address], pair, candles, timeFrom, timeTo)
 		}
 	}
 
@@ -59,4 +61,18 @@ func (c *Aggregator) Tokens() ([]domain.Token, error) {
 	}
 
 	return tokens, nil
+}
+
+func (c *Aggregator) FetchNewCandles(tokens *[]domain.Token) error {
+	timeTo := time.Now().Unix()
+	for _, token := range *tokens {
+		for _, pair := range token.Pairs {
+			candles, err := c.birdeyeClient.TokenOHLC(pair.Pair, pair.EndTime, timeTo)
+			if err != nil {
+				return fmt.Errorf("failed to get token ohlc: %w", err)
+			}
+			pair.Candles = append(pair.Candles, mapCandles(candles)...)
+		}
+	}
+	return nil
 }

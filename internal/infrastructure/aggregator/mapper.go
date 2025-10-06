@@ -6,10 +6,12 @@ import (
 	moralisclient "go.mod/internal/infrastructure/moralis_client"
 )
 
-func addPairToToken(token *domain.Token, pair moralisclient.Pair, candles []birdeyeclient.Candle) {
+func addPairToToken(token *domain.Token, pair moralisclient.Pair, candles []birdeyeclient.Candle, startTime int64, endTime int64) {
 	token.Pairs = append(token.Pairs, domain.Pair{
-		Pair:    pair.PairAddress,
-		Candles: mapCandles(candles),
+		Pair:      pair.PairAddress,
+		Candles:   mapCandles(candles),
+		StartTime: startTime,
+		EndTime:   endTime,
 	})
 }
 
